@@ -1,53 +1,102 @@
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
-from MVPSDK.Interface import model_to_dict_list
+from fastapi.encoders import jsonable_encoder
 
 from .crud_repository import CRUDTask
 from .model import ModelTask
 from .api_validation import TaskOutput
+from MVPSDK.format_response import format_response
+
 
 class TaskManager:
-    
+
     def __init__(self, session):
-        """
-        Менеджер для работы с задачами.
-        :param session: Сессия SQLAlchemy.
-        """
         self.crud = CRUDTask(session)
         self.key = [key for key in ModelTask.__table__.columns.keys()]
 
-    def create(self, **kwargs) -> ModelTask:
-        """Создает новую задачу."""
-        
-        for key, value in kwargs.items():  # Исправлено
+    def create(self, **kwargs):
+        for key in kwargs:
             if key not in self.key:
-                raise HTTPException(
+                return format_response(
+                    success=False,
                     status_code=400,
-                    detail=f"Такого поля в задаче не существует: {key}"
+                    data={"error": f"Invalid field: {key}"},
+                    message="Ошибка валидации данных"
                 )
-        
-        task = ModelTask(**kwargs)
-        return self.crud.add(task=task)
+        try:
+            task = ModelTask(**kwargs)
+            task = self.crud.add(task)
+            return format_response(
+                success=True,
+                status_code=201,
+                data={"task_id": task.id},
+                message="Задача успешно добавлена"
+            )
+        except Exception as e:
+            return format_response(
+                success=False,
+                status_code=500,
+                data={"error": str(e)},
+                message="Ошибка при добавлении задачи"
+            )
 
-    def update(self, task_id: int, **kwargs) -> bool:
-        """Обновляет задачу по ID."""
-        return self.crud.update(task_id, **kwargs)
+    def update(self, task_id: int, **kwargs):
+        try:
+            task = self.crud.update(task_id, **kwargs)
+            if not task:
+                return format_response(
+                    success=False,
+                    status_code=404,
+                    message="Задача не найдена"
+                )
+            return format_response(
+                data={"task_id": task.id},
+                message="Задача успешно обновлена"
+            )
+        except Exception as e:
+            return format_response(
+                success=False,
+                status_code=500,
+                data={"error": str(e)},
+                message="Ошибка при обновлении задачи"
+            )
 
-    def delete_task(self, task_id: int) -> bool:
-        """Удаляет задачу по ID."""
-        return self.crud.remove(task_id)
+    def delete_task(self, task_id: int):
+        try:
+            result = self.crud.remove(task_id)
+            if not result:
+                return format_response(
+                    success=False,
+                    status_code=404,
+                    message="Задача не найдена"
+                )
+            return format_response(
+                message="Задача успешно удалена"
+            )
+        except Exception as e:
+            return format_response(
+                success=False,
+                status_code=500,
+                data={"error": str(e)},
+                message="Ошибка при удалении задачи"
+            )
 
-    def get(self, filters: dict = None) -> list[ModelTask]:
-        """Возвращает список задач с возможностью фильтрации."""
-        try:                 
+    def get(self, filters: dict = None):
+        try:
             query = self.crud.get_all_query()
             if filters:
                 for condition in filters:
                     query = query.filter(condition)
-            tasks = [TaskOutput.model_validate(task) for task in query.all()]
-            return tasks
+            tasks = [
+                TaskOutput.model_validate(task)
+                for task in query.all()
+            ]
+            return format_response(
+                data= jsonable_encoder(tasks),
+                message="Список задач получен"
+            )
         except Exception as e:
-            raise HTTPException(
+            return format_response(
+                success=False,
                 status_code=500,
-                detail=f"Ошибка при получении задач: {str(e)} с фильтрами {filters}"
+                data={"error": str(e), "filters": filters},
+                message="Ошибка при получении задач"
             )
