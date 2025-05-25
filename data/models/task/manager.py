@@ -2,7 +2,8 @@ from fastapi.encoders import jsonable_encoder
 
 from .crud_repository import CRUDTask
 from .model import ModelTask
-from .api_validation import TaskOutput
+from .validation.api_response import APIResponse
+from .validation.taskoutput import TaskOutput
 from MVPSDK.format_response import format_response
 
 
@@ -24,9 +25,8 @@ class TaskManager:
         try:
             task = ModelTask(**kwargs)
             task = self.crud.add(task)
-            return format_response(
-                success=True,
-                status_code=201,
+            return APIResponse(
+                status="success",
                 data={"task_id": task.id},
                 message="Задача успешно добавлена"
             )
@@ -47,7 +47,8 @@ class TaskManager:
                     status_code=404,
                     message="Задача не найдена"
                 )
-            return format_response(
+            return APIResponse(
+                status="success",
                 data={"task_id": task.id},
                 message="Задача успешно обновлена"
             )
@@ -68,7 +69,9 @@ class TaskManager:
                     status_code=404,
                     message="Задача не найдена"
                 )
-            return format_response(
+            return APIResponse(
+                status="success",
+                data=None,
                 message="Задача успешно удалена"
             )
         except Exception as e:
@@ -89,8 +92,9 @@ class TaskManager:
                 TaskOutput.model_validate(task)
                 for task in query.all()
             ]
-            return format_response(
-                data= jsonable_encoder(tasks),
+            return APIResponse(
+                status="success",
+                data=tasks,
                 message="Список задач получен"
             )
         except Exception as e:

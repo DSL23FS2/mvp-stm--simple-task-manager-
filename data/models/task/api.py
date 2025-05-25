@@ -1,59 +1,60 @@
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import sessionmaker
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from typing import List
 
+from data.base_metadata import get_session
 from .manager import TaskManager
-from .api_validation import TaskCreate, TaskUpdate, TaskDelete, TaskFilter
+from .validation import TaskCreate
+from .validation import TaskUpdate
+from .validation import APIResponse
+from .validation import TaskOutput
 from .model import ModelTask
 
-def route_api(session: sessionmaker) -> APIRouter:
+router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+@router.get("/", response_model=APIResponse[List[TaskOutput]])
+def get_all_tasks(session: Session = Depends(get_session)):
     """
-    Функция для создания маршрутов API для задач.
-    :param session: Сессия SQLAlchemy.
-    :return: APIRouter с маршрутами для задач.
+    Получить список всех задач.
     """
+    manager = TaskManager(session)
+    return manager.get()
     
-    router = APIRouter(prefix="/tasks", tags=["tasks"])
-    manager = TaskManager(session);
-    
-    @router.get("/")
-    def get_tasks():
-        """
-        Получить список всех задач.
-        """
-        return manager.get()
-        
-    @router.get("/{task_id}")
-    def get_tasks(task_id: int):
-        """
-        Получить задачу по ID.
-        :param task_id: ID задачи.
-        """
-        return manager.get([ModelTask.id == task_id])
+@router.get("/{task_id}", response_model=APIResponse[TaskOutput])
+def get_task_by_id(task_id: int, session: Session = Depends(get_session)):
+    """
+    Получить задачу по ID.
+    :param task_id: ID задачи.
+    """
+    manager = TaskManager(session)
+    return manager.get([ModelTask.id == task_id])
 
-    @router.post("/create")
-    def create_task(task: TaskCreate):
-        """
-        Создать новую задачу.
-        :param task: Данные задачи.
-        """
-        return manager.create(**task.model_dump(exclude={"id"}))
+@router.post("/", response_model=APIResponse[dict])
+def create_task(task: TaskCreate, session: Session = Depends(get_session)):
+    """
+    Создать новую задачу.
+    :param task: Данные задачи.
+    """
+    manager = TaskManager(session)
+    return manager.create(**task.model_dump())
 
-    @router.put("/update")
-    def update_task(task: TaskUpdate):
-        """
-        Обновить задачу.
-        :param task: Данные задачи для обновления.
-        """
-        return manager.update(task_id=task.id, **task.model_dump(exclude={"id"}))
+@router.put("/", response_model=APIResponse[dict])
+def update_task(task: TaskUpdate, session: Session = Depends(get_session)):
+    """
+    Обновить задачу.
+    :param task: Данные задачи для обновления.
+    """
+    manager = TaskManager(session)
+    return manager.update(task_id=task.id, **task.model_dump(exclude={"id"}))
 
-    @router.delete("/{task_id}")
-    def delete_task(task_id: int):
-        """
-        Удалить задачу.
-        :param task_id: ID задачи для удаления.
-        """
-        return manager.delete_task(task_id=task_id)
+@router.delete("/{task_id}", response_model=APIResponse[None])
+def delete_task(task_id: int, session: Session = Depends(get_session)):
+    """
+    Удалить задачу.
+    :param task_id: ID задачи для удаления.
+    """
+    manager = TaskManager(session)
+    return manager.delete_task(task_id=task_id)
 
     # @router.post("/filters")
     # def filter_tasks(filters: TaskFilter):
@@ -64,4 +65,3 @@ def route_api(session: sessionmaker) -> APIRouter:
     #     return manager.get(filters=filters.filters)
 
 
-    return router

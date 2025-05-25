@@ -1,5 +1,5 @@
-from data import DatabaseInitializer;
-from data.models.task.api import route_api
+from data.base_metadata import create_all;
+from data.models.task.api import router as task_api;
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI;
 
@@ -7,8 +7,8 @@ app = FastAPI();
 
 def main():
     # Инициализация базы данных
-    db = DatabaseInitializer();
-    db.create_all();  # Создание всех таблиц в базе данных
+
+    create_all();  # Создание всех таблиц в базе данных
 
     app.add_middleware(
         CORSMiddleware,
@@ -19,8 +19,7 @@ def main():
     )
 
     # Регистрация маршрутов API
-    session = db.get_session()  # Получение сессии SQLAlchemy
-    app.include_router(route_api(session))  # Регистрация маршрутов задач
+    app.include_router(task_api)  # Регистрация маршрутов задач
     
     # Запуск приложения FastAPI
     import uvicorn
