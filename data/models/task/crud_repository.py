@@ -1,3 +1,4 @@
+# data/models/task/crud_repository.py
 from .model import ModelTask
 from sqlalchemy.orm import Session, Query
 
@@ -42,7 +43,7 @@ class CRUDTask:
             raise e
 
     def get(self, task_id: int) -> ModelTask:
-        return self.session.query(self.model).get(task_id)
+        return self.session.get(self.model, task_id)
 
     def get_all_query(self) -> Query:
         return self.session.query(self.model)
