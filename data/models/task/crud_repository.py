@@ -42,7 +42,8 @@ class CRUDTask:
             self.session.rollback()
             raise e
 
-    def get(self, task_id: int) -> ModelTask:
+    def get(self, task_id: int) -> ModelTask | None:
+        """Получить задачу по ID."""
         return self.session.get(self.model, task_id)
 
     def get_all_query(self) -> Query:

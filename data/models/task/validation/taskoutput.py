@@ -3,7 +3,7 @@ from pydantic import Field
 
 from .taskbase import TaskBase
 class TaskOutput(TaskBase):
-    """Модель для вывода задачи."""
+    """Модель для валидации ответа при получении задачи."""
     id: int = Field(..., description="ID задачи (обязательно)")
     
     model_config = {

@@ -1,8 +1,9 @@
 # main.py
-from data.base_metadata import create_all;
-from data.models.task.api import router as task_api;
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI;
+
+from data.base_metadata import create_all;
+from data.models.task.api import router as task_api;
 
 app = FastAPI();
 
@@ -22,9 +23,9 @@ def main():
     # Регистрация маршрутов API
     app.include_router(task_api)  # Регистрация маршрутов задач
     
-    # Запуск приложения FastAPI
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000, log_level="info")
+    uvicorn.run(app, host="localhost", port=8000, log_level="info")  # Запуск FastAPI с Uvicorn
+    # Запуск приложения FastAPI с NiceGUI
 
 if __name__ == "__main__":
     main()

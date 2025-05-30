@@ -9,17 +9,10 @@ from .validation import TaskCreate
 from .validation import TaskUpdate
 from .validation import APIResponse
 from .validation import TaskOutput
+from .validation import TaskQueryParams
 from .model import ModelTask
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
-
-@router.get("/", response_model=APIResponse[List[TaskOutput]])
-def get_all_tasks(session: Session = Depends(get_session)):
-    """
-    Получить список всех задач.
-    """
-    manager = TaskManager(session)
-    return manager.get()
     
 @router.get("/{task_id}", response_model=APIResponse[TaskOutput])
 def get_task_by_id(task_id: int, session: Session = Depends(get_session)):
@@ -28,7 +21,19 @@ def get_task_by_id(task_id: int, session: Session = Depends(get_session)):
     :param task_id: ID задачи.
     """
     manager = TaskManager(session)
-    return manager.get([ModelTask.id == task_id])
+    return manager.get_by_id(task_id)
+
+@router.get("/", response_model=APIResponse[List[TaskOutput]])
+def get_tasks(
+    query: TaskQueryParams = Depends(),
+    session: Session = Depends(get_session)
+):
+    """
+    Получить задачи с возможностью фильтрации.
+    :param query: Параметры фильтрации и сортировки.
+    """
+    manager = TaskManager(session)
+    return manager.get(query)
 
 @router.post("/", response_model=APIResponse[dict])
 def create_task(task: TaskCreate, session: Session = Depends(get_session)):
@@ -65,4 +70,10 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
     #     """
     #     return manager.get(filters=filters.filters)
 
-
+    # @router.get("/", response_model=APIResponse[List[TaskOutput]])
+    # def get_all_tasks(session: Session = Depends(get_session)):
+    #     """
+    #     Получить список всех задач.
+    #     """
+    #     manager = TaskManager(session)
+    #     return manager.get()
