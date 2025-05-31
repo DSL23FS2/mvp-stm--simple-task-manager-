@@ -1,31 +1,40 @@
 # main.py
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI;
+from fastapi import FastAPI
+from nicegui import ui
+import uvicorn
 
-from data.base_metadata import create_all;
-from data.models.task.api import router as task_api;
+from data.base_metadata import create_all
+from data.models.task.api import router as task_api
+from lib.ui import TaskListUI
 
-app = FastAPI();
+app = FastAPI()
+
+@ui.page('/')
+def home():
+    task_list = TaskListUI()
+    task_list.create()
 
 def main():
     # Инициализация базы данных
-
-    create_all();  # Создание всех таблиц в базе данных
+    create_all()
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Разрешить все источники
+        allow_origins=["*"],
         allow_credentials=True,
-        allow_methods=["*"],  # Разрешить все методы
-        allow_headers=["*"],  # Разрешить все заголовки
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Регистрация маршрутов API
-    app.include_router(task_api)  # Регистрация маршрутов задач
+    app.include_router(task_api)
+
+    # Запуск NiceGUI с FastAPI
+    ui.run_with(app=app)
     
-    import uvicorn
-    uvicorn.run(app, host="localhost", port=8000, log_level="info")  # Запуск FastAPI с Uvicorn
-    # Запуск приложения FastAPI с NiceGUI
+    # Запуск FastAPI с Uvicorn
+    uvicorn.run(app, host="localhost", port=8000, log_level="info")
 
 if __name__ == "__main__":
     main()

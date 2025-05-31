@@ -23,7 +23,7 @@ def get_task_by_id(task_id: int, session: Session = Depends(get_session)):
     manager = TaskManager(session)
     return manager.get_by_id(task_id)
 
-@router.get("/", response_model=APIResponse[List[TaskOutput]])
+@router.get("/", response_model=APIResponse[TaskOutput])
 def get_tasks(
     query: TaskQueryParams = Depends(),
     session: Session = Depends(get_session)

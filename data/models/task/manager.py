@@ -7,6 +7,7 @@ from .model import ModelTask
 from .validation import APIResponse
 from .validation import TaskOutput
 from .validation import TaskQueryParams
+from .error.not_found_error import NotFoundError
 from MVPSDK.format_response import format_response
 
 
@@ -44,16 +45,17 @@ class TaskManager:
     def update(self, task_id: int, **kwargs):
         try:
             task = self.crud.update(task_id, **kwargs)
-            if not task:
-                return format_response(
-                    success=False,
-                    status_code=404,
-                    message="Задача не найдена"
-                )
             return APIResponse(
                 status="success",
                 data=[{"task_id": task.id}],
                 message="Задача успешно обновлена"
+            )
+        except NotFoundError as e:
+            return format_response(
+                success=False,
+                status_code=404,
+                data={"error": str(e)},
+                message="Задача не найдена"
             )
         except Exception as e:
             return format_response(
@@ -66,21 +68,22 @@ class TaskManager:
     def delete_task(self, task_id: int):
         try:
             result = self.crud.remove(task_id)
-            if not result:
-                return format_response(
-                    success=False,
-                    status_code=404,
-                    message="Задача не найдена"
-                )
             return APIResponse(
                 status="success",
                 data=[None],
                 message="Задача успешно удалена"
             )
+        except NotFoundError as e:
+            return format_response(
+                    success=False,
+                    status_code=404,
+                    data={"error": str(e)},
+                    message="Задача не найдена"
+                )
         except Exception as e:
             return format_response(
                 success=False,
-                status_code=500,
+                status_code = 500,
                 data={"error": str(e)},
                 message="Ошибка при удалении задачи"
             )

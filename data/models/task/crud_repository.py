@@ -1,6 +1,8 @@
 # data/models/task/crud_repository.py
-from .model import ModelTask
 from sqlalchemy.orm import Session, Query
+
+from .model import ModelTask
+from .error.not_found_error import NotFoundError
 
 class CRUDTask:
 
@@ -18,22 +20,18 @@ class CRUDTask:
             raise e
 
     def remove(self, task_id: int) -> bool:
-        task = self.get(task_id)
-        if not task:
-            return False
         try:
+            task = self.get(task_id)
             self.session.delete(task)
             self.session.commit()
-            return True
+            return task
         except Exception as e:
             self.session.rollback()
             raise e
 
     def update(self, task_id: int, **kwargs) -> ModelTask:
-        task = self.get(task_id)
-        if not task:
-            return None
         try:
+            task = self.get(task_id)
             for key, value in kwargs.items():
                 setattr(task, key, value)
             self.session.commit()
@@ -44,7 +42,13 @@ class CRUDTask:
 
     def get(self, task_id: int) -> ModelTask | None:
         """Получить задачу по ID."""
-        return self.session.get(self.model, task_id)
+        try:
+            task = self.session.get(self.model, task_id)
+            if not task:
+                raise NotFoundError("Task", task_id)
+            return task
+        except Exception as e:
+            raise e
 
     def get_all_query(self) -> Query:
         return self.session.query(self.model)

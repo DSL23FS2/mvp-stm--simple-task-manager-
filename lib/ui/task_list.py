@@ -1,0 +1,37 @@
+from nicegui import ui
+from data.models.task.manager import TaskManager
+from data.models.task.validation import TaskQueryParams
+from data.base_metadata import Session
+from .task_item import TaskItemUI
+
+class TaskListUI:
+    def __init__(self):
+        self.session = Session()
+        self.manager = TaskManager(self.session)
+        self.container = ui.column()
+
+    def delete_task(self, task_id: int):
+        response = self.manager.delete_task(task_id)
+        if response.status == "success":
+            self.refresh_tasks()
+
+    def refresh_tasks(self):
+        query_params = TaskQueryParams()
+        response = self.manager.get(query_params)
+        
+        with self.container:
+            self.container.clear()
+            ui.label('Tasks').classes('text-h4 q-mb-md')
+            
+            if response.status == "success":
+                for task in response.data:
+                    task_dict = task.model_dump()
+                    TaskItemUI(
+                        task_data=task_dict,
+                        on_delete=self.delete_task,
+                        on_refresh=self.refresh_tasks
+                    )
+
+    def create(self):
+        ui.button('Refresh', on_click=self.refresh_tasks).classes('q-mb-md')
+        return self.container
