@@ -15,6 +15,12 @@ class TaskListUI:
         if response.status == "success":
             self.refresh_tasks()
 
+    def update_task(self, task_id: int, updated_data: dict):
+        """Обновление задачи через менеджер"""
+        response = self.manager.update(task_id, **updated_data)
+        if response.status == "success":
+            self.refresh_tasks()
+
     def refresh_tasks(self):
         query_params = TaskQueryParams()
         response = self.manager.get(query_params)
@@ -29,7 +35,8 @@ class TaskListUI:
                     TaskItemUI(
                         task_data=task_dict,
                         on_delete=self.delete_task,
-                        on_refresh=self.refresh_tasks
+                        on_refresh=self.refresh_tasks,
+                        on_update=self.update_task
                     )
 
     def create(self):

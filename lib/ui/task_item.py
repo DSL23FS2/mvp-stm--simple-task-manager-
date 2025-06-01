@@ -1,6 +1,7 @@
 from nicegui import ui
 from datetime import datetime
 from typing import Callable
+from .task_details import TaskDetailsUI
 
 class TaskItemUI:
     # Константы для размеров (можно вынести в конфигурацию)
@@ -8,11 +9,18 @@ class TaskItemUI:
     ROW_HEIGHT = 'h-[64px]'        # Фиксированная высота строки
     DETAILS_HEIGHT = 'h-[240px]'   # Фиксированная высота области деталей
 
-    def __init__(self, task_data: dict, on_delete: Callable[[int], None], on_refresh: Callable[[], None]):
+    def __init__(
+        self, 
+        task_data: dict, 
+        on_delete: Callable[[int], None], 
+        on_refresh: Callable[[], None],
+        on_update: Callable[[int, dict], None]
+    ):
         # Инициализация основных параметров
         self.task = task_data
         self.on_delete = on_delete
         self.on_refresh = on_refresh
+        self.on_update = on_update
         self.expanded = False
         # Основной контейнер с фиксированной шириной
         self.container = ui.column().classes(f'{self.CONTAINER_WIDTH} mx-auto')
@@ -25,7 +33,8 @@ class TaskItemUI:
     def toggle_details(self):
         """Переключение видимости детальной информации"""
         self.expanded = not self.expanded
-        self.details_container.set_visibility(self.expanded)
+        if hasattr(self, 'details_container'):
+            self.details_container.visible = self.expanded
 
     def _create_ui(self):
         """Создание UI элементов"""
@@ -47,30 +56,18 @@ class TaskItemUI:
                     ui.button(icon='expand_more', on_click=self.toggle_details).props('flat dense')
                     ui.button(icon='delete', on_click=lambda: self._handle_delete()).props('flat dense color=red')
 
-            # Контейнер с деталями (фиксированная высота)
-            self.details_container = ui.column().classes(
-                f'w-full p-4 bg-gray-50 border-x border-b rounded-b {self.DETAILS_HEIGHT}'
-                ' overflow-y-auto'
+            # Create details UI
+            details_ui = TaskDetailsUI(
+                task_data=self.task,
+                on_update=self._handle_update
             )
-            with self.details_container:
-                # Детальная информация с корректным переносом текста
-                self._create_detail_row("Task Name", self.task['name'])
-                self._create_detail_row("Start Date", self.format_date(self.task['created_at']))
-                self._create_detail_row("End Date", self.format_date(self.task['updated_at']))
-                if self.task['description']:
-                    self._create_detail_row("Description", self.task['description'])
-                self._create_detail_row("Status", 'Completed' if self.task['is_completed'] else 'In Progress')
+            self.details_container = details_ui.container
+            self.details_container.visible = False  # Use visible property directly
 
-            # Скрываем детали по умолчанию
-            self.details_container.set_visibility(False)
-
-    def _create_detail_row(self, label: str, value: str):
-        """Создание строки с детальной информацией"""
-        with ui.row().classes('w-full gap-4 py-2'):
-            ui.label(f"{label}:").classes('font-bold w-[128px]')
-            # Контейнер для значения с фиксированной шириной и переносом текста
-            with ui.element('div').classes('w-[600px]'):
-                ui.label(str(value)).classes('break-words')
+    def _handle_update(self, task_id: int, updated_data: dict):
+        """Обработка обновления задачи"""
+        self.on_update(task_id, updated_data)
+        self.on_refresh()  # Просто вызываем refresh без параметров
 
     def _handle_delete(self):
         """Обработка удаления задачи"""
