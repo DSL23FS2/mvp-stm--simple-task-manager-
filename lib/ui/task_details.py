@@ -10,7 +10,7 @@ class TaskDetailsUI:
         self.edited_data = {}
         self.fields = {}  # Store field references
         self.container = ui.column().classes(
-            'w-full p-4 bg-gray-50 border-x border-b rounded-b h-[240px]'
+            'w-full p-4 bg-gray-50 border-x border-b rounded-b'
             ' overflow-y-auto'
         )
         self._create_ui()

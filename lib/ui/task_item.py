@@ -36,6 +36,12 @@ class TaskItemUI:
         if hasattr(self, 'details_container'):
             self.details_container.visible = self.expanded
 
+    def _handle_status_change(self, e):
+        """Обработчик изменения статуса задачи"""
+        updated_data = {'is_completed': e.value}
+        self.on_update(self.task['id'], updated_data)
+        self.on_refresh()
+
     def _create_ui(self):
         """Создание UI элементов"""
         with self.container:
@@ -48,8 +54,11 @@ class TaskItemUI:
                         ui.label(self.task['name']).classes('text-lg truncate')
                     # Дата с фиксированной шириной
                     ui.label(self.format_date(self.task['updated_at'])).classes('w-[160px]')
-                    # Статус
-                    ui.label('✓' if self.task['is_completed'] else '○').classes('w-[32px] text-center')
+                    # Заменяем статичный статус на checkbox
+                    ui.checkbox(
+                        value=self.task['is_completed'],
+                        on_change=self._handle_status_change
+                    ).classes('w-[32px]')
                 
                 # Кнопки управления
                 with ui.row().classes('gap-2 w-[96px] justify-end'):
