@@ -38,6 +38,14 @@ class TaskListUI:
                         on_update=self.update_task
                     )
 
+    def create_task(self, task_data: dict):
+        """Создание новой задачи"""
+        response = self.manager.create(**task_data)
+        if response.status == "success":
+            self.refresh_tasks()
+        else:
+            ui.notify(response.message, type='negative')
+
     def create(self):
         ui.button('Refresh', on_click=self.refresh_tasks).classes('q-mb-md')
         return self.container

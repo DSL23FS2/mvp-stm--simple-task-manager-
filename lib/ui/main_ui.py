@@ -1,5 +1,8 @@
 from nicegui import ui
 from .task_list import TaskListUI
+from .controls.settings_section import SettingsSection
+from .controls.filters_section import FiltersSection
+from .controls.create_section import CreateSection
 
 class MainUI:
     # Базовые размеры
@@ -30,17 +33,52 @@ class MainUI:
 
     def _create_ui(self):
         """Создание основного интерфейса"""
-        with self.container:
-            # Заголовок приложения
-            ui.label('Task Manager').classes('text-h4 q-mb-md')
-            
-            # Фиксированный заголовок таблицы
-            self._create_header()
-            
-            # Область прокрутки с фиксированной шириной
-            with ui.scroll_area().classes(f'{self.SCROLL_CONTAINER_WIDTH} {self.CONTENT_HEIGHT}'):
-                with ui.column().classes(f'{self.CONTAINER_WIDTH}'):
-                    TaskListUI().create()
+        with ui.row().classes('w-full gap-4'):
+            # Левая панель с задачами
+            with ui.column().classes(f'{self.SCROLL_CONTAINER_WIDTH} ml-4'):
+                # Заголовок приложения
+                ui.label('Task Manager').classes('text-h4 q-mb-md')
+                
+                # Фиксированный заголовок таблицы
+                self._create_header()
+                
+                # Область прокрутки с фиксированной шириной
+                with ui.scroll_area().classes(f'{self.SCROLL_CONTAINER_WIDTH} {self.CONTENT_HEIGHT}'):
+                    with ui.column().classes(f'{self.CONTAINER_WIDTH}'):
+                        self.task_list = TaskListUI()
+                        self.task_list.create()
+
+            # Правая панель управления
+            with ui.column().classes('flex-grow h-full max-w-md gap-4'):
+                # Кнопки управления
+                with ui.row().classes('w-full gap-2 justify-center q-mb-md'):
+                    for btn_data in [
+                        ('Settings', self._toggle_settings),
+                        ('Filters', self._toggle_filters),
+                        ('Create', self._toggle_create)
+                    ]:
+                        ui.button(btn_data[0], on_click=btn_data[1]).classes('w-32')
+
+                # Панели управления
+                with ui.scroll_area().classes(f'w-full {self.CONTENT_HEIGHT}'):
+                    self.settings_section = SettingsSection()
+                    self.filters_section = FiltersSection(self.task_list.refresh_tasks)
+                    self.create_section = CreateSection(self.task_list.create_task)
+
+    def _toggle_settings(self):
+        self.settings_section.toggle()
+        self.filters_section.container.style('display: none')
+        self.create_section.container.style('display: none')
+
+    def _toggle_filters(self):
+        self.settings_section.container.style('display: none')
+        self.filters_section.toggle()
+        self.create_section.container.style('display: none')
+
+    def _toggle_create(self):
+        self.settings_section.container.style('display: none')
+        self.filters_section.container.style('display: none')
+        self.create_section.toggle()
 
     def create(self):
         return self.container
