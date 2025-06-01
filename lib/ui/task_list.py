@@ -8,7 +8,7 @@ class TaskListUI:
     def __init__(self):
         self.session = Session()
         self.manager = TaskManager(self.session)
-        self.container = ui.column()
+        self.container = ui.column().classes('w-full')
 
     def delete_task(self, task_id: int):
         response = self.manager.delete_task(task_id)
@@ -27,7 +27,6 @@ class TaskListUI:
         
         with self.container:
             self.container.clear()
-            ui.label('Tasks').classes('text-h4 q-mb-md')
             
             if response.status == "success":
                 for task in response.data:

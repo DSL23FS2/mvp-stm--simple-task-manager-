@@ -47,7 +47,7 @@ class TaskItemUI:
         with self.container:
             # Основная строка с фиксированной высотой
             with ui.row().classes(f'w-full items-center justify-between p-2 border rounded {self.ROW_HEIGHT}'):
-                # Левая часть с информацией
+                # Контент с фиксированной шириной
                 with ui.row().classes('gap-8 items-center flex-grow'):
                     # Название задачи
                     with ui.element('div').classes('w-[300px]'):
@@ -60,8 +60,8 @@ class TaskItemUI:
                         on_change=self._handle_status_change
                     ).classes('w-[32px]')
                 
-                # Кнопки управления
-                with ui.row().classes('gap-2 w-[96px] justify-end'):
+                # Кнопки с фиксированной шириной
+                with ui.row().classes('w-[96px] gap-2 justify-end'):
                     ui.button(icon='expand_more', on_click=self.toggle_details).props('flat dense')
                     ui.button(icon='delete', on_click=lambda: self._handle_delete()).props('flat dense color=red')
 

@@ -6,14 +6,14 @@ import uvicorn
 
 from data.base_metadata import create_all
 from data.models.task.api import router as task_api
-from lib.ui import TaskListUI
+from lib.ui import MainUI
 
 app = FastAPI()
 
 @ui.page('/')
 def home():
-    task_list = TaskListUI()
-    task_list.create()
+    main_ui = MainUI()
+    main_ui.create()
 
 def main():
     # Инициализация базы данных
