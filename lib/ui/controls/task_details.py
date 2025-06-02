@@ -85,7 +85,8 @@ class TaskDetailsUI:
             )
             self.deadline_edit = DateTimeInput(
                 'Deadline',
-                value=self.task.get('updated_at')
+                value=self.task.get('updated_at'),
+                min_date=datetime.now()  # Set current date as minimum
             )
 
     def _toggle_mode(self, edit_mode: bool):
@@ -102,8 +103,13 @@ class TaskDetailsUI:
 
     def _save_changes(self):
         """Save changes and exit edit mode"""
+        name = self.name_edit.get_value()
+        if not name:
+            ui.notify('Task name is required', type='negative')
+            return
+        
         updated_data = {
-            'name': self.name_edit.get_value(),
+            'name': name,
             'description': self.description_edit.get_value(),
             'updated_at': self.deadline_edit.get_value()
         }

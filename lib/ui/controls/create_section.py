@@ -26,10 +26,12 @@ class CreateSection(BaseSection):
                     multiline=True
                 )
                 
-                # DateTime input for deadline
-                self.deadline_input = DateTimeInput(
-                    label='Deadline'
-                )
+                with ui.column().classes('w-full'):
+                    ui.label('Deadline')
+                    self.deadline_input = DateTimeInput(
+                        'Deadline',
+                        min_date=datetime.now()  # Set current date as minimum
+                    )
                 
                 with ui.row().classes('gap-2 justify-end w-full'):
                     ui.button(icon='check', on_click=self._handle_create).props('flat color=green')
