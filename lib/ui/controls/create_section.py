@@ -16,13 +16,13 @@ class CreateSection(BaseSection):
                 # Single line text input for task name
                 self.name_input = TextInput(
                     label='Task Name',
-                    placeholder='Введите название задачи'
+                    placeholder='input task name here',
                 )
                 
                 # Multiline text input for description
                 self.description_input = TextInput(
                     label='Description',
-                    placeholder='Введите описание задачи',
+                    placeholder='input task description here',
                     multiline=True
                 )
                 
@@ -50,6 +50,7 @@ class CreateSection(BaseSection):
         self._clear_form()
 
     def _clear_form(self):
-        self.name_input.value = ''
-        self.description_input.value = ''
-        self.deadline_input.value = None
+        """Clear all input fields"""
+        self.name_input.set_value('')
+        self.description_input.set_value('')
+        self.deadline_input.set_value(None)

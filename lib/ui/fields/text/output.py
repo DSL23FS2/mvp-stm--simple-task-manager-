@@ -10,12 +10,12 @@ class TextOutput(UIField):
         with self.container:
             ui.label(self.label).classes('text-sm text-gray-600')
             if self.multiline:
-                # Use props for readonly state and styling
                 self.output = ui.textarea(
-                    value='',  # Will be set in _update_ui
+                    value='',
                 ).props('readonly dense').classes('w-full bg-gray-50')
             else:
-                self.output = ui.label().classes('mt-1')
+                # Используем paragraph вместо label для лучшего отображения
+                self.output = ui.label('').classes('block mt-1 text-gray-900')
             self._update_ui()
 
     def _update_ui(self):
@@ -26,7 +26,10 @@ class TextOutput(UIField):
             display_value = '-'
             
         if hasattr(self, 'output'):
-            self.output.value = display_value
+            if self.multiline:
+                self.output.value = display_value
+            else:
+                self.output.text = display_value
 
     def set_value(self, value: str):
         self.value = value
