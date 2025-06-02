@@ -5,7 +5,7 @@ from lib.ui.controls import TaskListUI, FiltersSection, CreateSection
 class MainUI:
     # Базовые размеры
     BASE_WIDTH = 800
-    CONTROL_WIDTH = 300
+    CONTROL_WIDTH = 480  # Increased control panel width
     SCROLLBAR_WIDTH = 24
     
     # Константы для размеров и стилей
@@ -29,6 +29,22 @@ class MainUI:
             ui.label('Status').classes('w-[32px] font-bold')
             ui.element('div').classes('w-[96px]')
 
+    def _create_display_panel(self):
+        """Создание левой панели отображения задач"""
+        with ui.column().classes(f'{self.SCROLL_CONTAINER_WIDTH}'):
+            # Заголовок приложения
+            ui.label('Task Manager').classes('text-h4 q-mb-md')
+            
+            # Фиксированный заголовок таблицы
+            self._create_header()
+            
+            # Область прокрутки с задачами
+            with ui.scroll_area().classes(f'{self.SCROLL_CONTAINER_WIDTH} {self.CONTENT_HEIGHT}'):
+                with ui.column().classes(f'{self.CONTAINER_WIDTH}'):
+                    self.task_list = TaskListUI(self.filter_context)
+                    # Initial load using default filter
+                    self.task_list.refresh_tasks()
+
     def _create_control_panel(self):
         """Создание правой панели управления"""
         with ui.column().classes(f'{self.CONTROL_CONTAINER_WIDTH}'):
@@ -43,38 +59,8 @@ class MainUI:
     def _create_ui(self):
         """Создание основного интерфейса"""
         with self.main_container:
-            # Левая панель с задачами
-            with ui.column().classes(f'{self.SCROLL_CONTAINER_WIDTH}'):
-                # Заголовок приложения
-                ui.label('Task Manager').classes('text-h4 q-mb-md')
-                
-                # Фиксированный заголовок таблицы
-                self._create_header()
-                
-                # Область прокрутки с задачами
-                with ui.scroll_area().classes(f'{self.SCROLL_CONTAINER_WIDTH} {self.CONTENT_HEIGHT}'):
-                    with ui.column().classes(f'{self.CONTAINER_WIDTH}'):
-                        self.task_list = TaskListUI(self.filter_context)
-                        # Initial load using default filter
-                        self.task_list.refresh_tasks()
-
-            # Правая панель управления
+            self._create_display_panel()
             self._create_control_panel()
-
-    def _toggle_settings(self):
-        self.settings_section.toggle()
-        self.filters_section.container.style('display: none')
-        self.create_section.container.style('display: none')
-
-    def _toggle_filters(self):
-        self.settings_section.container.style('display: none')
-        self.filters_section.toggle()
-        self.create_section.container.style('display: none')
-
-    def _toggle_create(self):
-        self.settings_section.container.style('display: none')
-        self.filters_section.container.style('display: none')
-        self.create_section.toggle()
 
     def create(self):
         """Return the main container"""

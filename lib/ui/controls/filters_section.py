@@ -12,8 +12,11 @@ class FiltersSection(BaseSection):
     def _create_content(self):
         """Override BaseSection's _create_content"""
         with self.content:
-            with ui.column().classes('gap-4 w-full'):
-                self.name_filter = ui.input(label='Task Name Filter')
+            with ui.column().classes('w-full gap-4 px-2'):  # Added padding
+                self.name_filter = ui.input(
+                    label='Task Name Filter'
+                ).classes('w-full')  # Full width
+                
                 self.status_filter = ui.select(
                     options={
                         None: 'All',
@@ -22,7 +25,8 @@ class FiltersSection(BaseSection):
                     },
                     value=False,
                     label='Status Filter'
-                )
+                ).classes('w-full')  # Full width
+                
                 self.sort_by = ui.select(
                     options={
                         'created_at': 'Creation Date',
@@ -30,7 +34,8 @@ class FiltersSection(BaseSection):
                     },
                     value='created_at',
                     label='Sort By'
-                )
+                ).classes('w-full')  # Full width
+                
                 self.order = ui.select(
                     options={
                         SortOrder.asc: 'Ascending',
@@ -38,8 +43,9 @@ class FiltersSection(BaseSection):
                     },
                     value=SortOrder.asc,
                     label='Order'
-                )
-                ui.button('Apply Filters', on_click=self._apply_filters)
+                ).classes('w-full')  # Full width
+                
+                ui.button('Apply Filters', on_click=self._apply_filters).classes('w-full')
 
     def _apply_filters(self):
         params = TaskQueryParams(
