@@ -1,83 +1,128 @@
 from nicegui import ui
 from datetime import datetime
-from typing import Callable, Dict, Any
+from typing import Dict, Any, Callable
+from ..fields.text.input import TextInput
+from ..fields.text.output import TextOutput
+from ..fields.datetime.input import DateTimeInput
+from ..fields.datetime.output import DateTimeOutput
+from ..fields.boolean.output import BooleanOutput
 
 class TaskDetailsUI:
     def __init__(self, task_data: dict, on_update: Callable[[int, Dict[str, Any]], None]):
         self.task = task_data
         self.on_update = on_update
         self.edit_mode = False
-        self.edited_data = {}
-        self.container = ui.column().classes(
-            'w-full p-4 bg-gray-50 border-x border-b rounded-b'
-        )
-        self._create_ui()
-
-    def _create_field(self, label: str, value: str) -> Dict[str, ui.element]:
-        field_container = ui.row().classes('w-full gap-4 py-2')
-        with field_container:
-            label_elem = ui.label(f"{label}:").classes('font-bold w-[128px]')
-            value_container = ui.element('div').classes('w-[600px]')
-            with value_container:
-                display_elem = ui.label(str(value)).classes('break-words')
-                edit_elem = ui.input(value=str(value)).classes('w-full')
-                # Начально скрываем поле редактирования
-                edit_elem.visible = False
-
-        return {
-            'container': field_container,
-            'label': label_elem,
-            'display': display_elem,
-            'edit': edit_elem
-        }
-
-    def _create_ui(self):
+        
+        # Create main container
+        self.container = ui.card().classes('w-full')
+        
+        # Create view and edit panels
         with self.container:
-            # Поля для отображения/редактирования
-            self.name_field = self._create_field("Task Name", self.task.get('name', '-'))
-            self.created_field = self._create_field("Start Date", self.format_date(self.task.get('created_at', '-')))
-            self.updated_field = self._create_field("End Date", self.format_date(self.task.get('updated_at', '-')))
-            self.description_field = self._create_field("Description", self.task.get('description', '-'))
-            self.status_field = self._create_field("Status", 'Completed' if self.task.get('is_completed') else 'In Progress')
-
-            # Кнопки управления
-            with ui.row().classes('w-full justify-end gap-2 mt-2'):
+            self.view_panel = ui.column().classes('w-full p-4 gap-4')
+            self.edit_panel = ui.column().classes('w-full p-4 gap-4')
+            
+            # Create content for both panels
+            self._create_view_panel()
+            self._create_edit_panel()
+            
+            # Action buttons row
+            with ui.row().classes('w-full justify-end gap-2 px-4 pb-2'):
                 self.edit_btn = ui.button('Edit', on_click=self._start_edit).props('outline')
                 with ui.row().classes('gap-2') as self.action_buttons:
-                    self.save_btn = ui.button(icon='check', on_click=self._save_changes).props('flat color=green')
-                    self.cancel_btn = ui.button(icon='close', on_click=self._cancel_edit).props('flat color=red')
-                self.action_buttons.visible = False
+                    ui.button(icon='check', on_click=self._save_changes).props('flat color=green')
+                    ui.button(icon='close', on_click=self._cancel_edit).props('flat color=red')
+        
+        # Initialize state
+        self._toggle_mode(False)
+
+    def _create_view_panel(self):
+        """Create read-only view elements"""
+        with self.view_panel:
+            # Get values with proper defaults
+            name = self.task.get('name', '')
+            desc = self.task.get('description', '')
+            status = self.task.get('is_completed', False)
+            created = self.task.get('created_at')
+            deadline = self.task.get('updated_at')
+
+            # Create output fields
+            with ui.column().classes('w-full gap-4'):
+                self.name_view = TextOutput('Task Name', value=name)
+                
+                # Description with proper multiline support
+                self.description_view = TextOutput(
+                    'Description',
+                    value=desc if desc else '-',
+                    multiline=True
+                )
+                
+                # Timestamps section
+                with ui.column().classes('gap-2'):
+                    self.created_view = DateTimeOutput(
+                        'Created',
+                        value=created,
+                        format='%Y-%m-%d %H:%M'
+                    )
+                    self.deadline_view = DateTimeOutput(
+                        'Deadline',
+                        value=deadline,
+                        format='%Y-%m-%d %H:%M'
+                    )
+                
+                self.status_view = BooleanOutput('Status', value=status, use_icon=True)
+
+    def _create_edit_panel(self):
+        """Create editable input elements"""
+        with self.edit_panel:
+            self.name_edit = TextInput(
+                'Task Name',
+                value=self.task.get('name', '')
+            )
+            self.description_edit = TextInput(
+                'Description',
+                value=self.task.get('description', ''),
+                multiline=True
+            )
+            self.deadline_edit = DateTimeInput(
+                'Deadline',
+                value=self.task.get('updated_at')
+            )
+
+    def _toggle_mode(self, edit_mode: bool):
+        """Switch between view and edit modes"""
+        self.edit_mode = edit_mode
+        self.view_panel.visible = not edit_mode
+        self.edit_panel.visible = edit_mode
+        self.edit_btn.visible = not edit_mode
+        self.action_buttons.visible = edit_mode
 
     def _start_edit(self):
-        self.edit_mode = True
-        self.edit_btn.visible = False
-        self.action_buttons.visible = True
-        for field in [self.name_field, self.description_field]:
-            field['display'].visible = False
-            field['edit'].visible = True
-
-    def _end_edit(self):
-        self.edit_mode = False
-        self.edit_btn.visible = True
-        self.action_buttons.visible = False
-        for field in [self.name_field, self.description_field]:
-            field['display'].visible = True
-            field['edit'].visible = False
+        """Enter edit mode"""
+        self._toggle_mode(True)
 
     def _save_changes(self):
-        self.edited_data = {
-            'name': self.name_field['edit'].value,
-            'description': self.description_field['edit'].value,
+        """Save changes and exit edit mode"""
+        updated_data = {
+            'name': self.name_edit.get_value(),
+            'description': self.description_edit.get_value(),
+            'updated_at': self.deadline_edit.get_value()
         }
-        self.on_update(self.task['id'], self.edited_data)
-        self._end_edit()
+        
+        if self.on_update:
+            self.on_update(self.task['id'], updated_data)
+            
+            # Update view panel values
+            self.name_view.set_value(updated_data['name'])
+            self.description_view.set_value(updated_data['description'])
+            self.deadline_view.set_value(updated_data['updated_at'])
+            
+        self._toggle_mode(False)
 
     def _cancel_edit(self):
-        # Восстанавливаем исходные значения
-        self.name_field['edit'].value = self.task.get('name', '-')
-        self.description_field['edit'].value = self.task.get('description', '-')
-        self._end_edit()
-
-    def format_date(self, date: datetime) -> str:
-        """Форматирование даты с проверкой на None"""
-        return date.strftime("%Y-%m-%d %H:%M") if date else "-"
+        """Cancel editing and revert changes"""
+        # Reset edit panel values to original
+        self.name_edit.set_value(self.task.get('name', ''))
+        self.description_edit.set_value(self.task.get('description', ''))
+        self.deadline_edit.set_value(self.task.get('updated_at'))
+        
+        self._toggle_mode(False)

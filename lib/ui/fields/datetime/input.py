@@ -3,16 +3,24 @@ from ...fields.base.field import UIField
 from nicegui import ui
 
 class DateTimeInput(UIField):
+    def __init__(self, label: str, value: datetime = None, **kwargs):
+        self.initial_value = value
+        super().__init__(label, value, **kwargs)
+
     def _create_ui(self):
         with self.container:
             ui.label(self.label).classes('text-sm text-gray-600')
             with ui.row().classes('w-full gap-2 items-end'):
                 with ui.column().classes('flex-grow'):
-                    self.date_input = ui.date().props('outlined').classes('w-full')
+                    initial_date = self.initial_value.strftime('%Y-%m-%d') if self.initial_value else None
+                    self.date_input = ui.date(
+                        value=initial_date
+                    ).props('outlined').classes('w-full')
+                
                 with ui.column().classes('w-[140px]'):
+                    initial_time = self.initial_value.strftime('%H:%M') if self.initial_value else '00:00'
                     self.time_input = ui.input(
-                        label='Time',
-                        value='12:00'
+                        value=initial_time
                     ).props('type=time outlined').classes('w-full')
 
     def get_value(self) -> datetime:
@@ -36,4 +44,4 @@ class DateTimeInput(UIField):
             self.time_input.value = value.strftime('%H:%M')
         else:
             self.date_input.value = None
-            self.time_input.value = '12:00'
+            self.time_input.value = '00:00'
