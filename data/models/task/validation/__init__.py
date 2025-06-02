@@ -3,7 +3,7 @@ from .taskoutput import TaskOutput
 from .taskbase import TaskBase
 from .taskcreate import TaskCreate
 from .taskupdate import TaskUpdate
-from .taskquery import TaskQueryParams
+from .taskquery import TaskQueryParams, SortOrder
 
 __all__ = [
     "APIResponse",
@@ -12,4 +12,5 @@ __all__ = [
     "TaskCreate",
     "TaskUpdate",
     "TaskQueryParams",
+    "SortOrder"
 ]

@@ -1,38 +1,45 @@
-from .base_section import BaseSection
 from nicegui import ui
-from typing import Callable
-from data.models.task.validation import TaskQueryParams
+from .base_section import BaseSection
+from lib.ui.context.task_filter_context import TaskFilterContext
+from data.models.task.validation import TaskQueryParams, SortOrder
 
 class FiltersSection(BaseSection):
-    def __init__(self, on_filter: Callable[[TaskQueryParams], None]):
-        self.on_filter = on_filter
-        super().__init__('Filters')
+    def __init__(self, filter_context: TaskFilterContext):
+        self.filter_context = filter_context
+        super().__init__(title='Фильтры')
+        # UI is created by BaseSection._create_ui
 
     def _create_content(self):
-        self.name_filter = ui.input(label='Task Name Filter')
-        self.status_filter = ui.select(
-            options=[
-                {'label': 'All', 'value': None},
-                {'label': 'Completed', 'value': True},
-                {'label': 'In Progress', 'value': False}
-            ],
-            label='Status Filter'
-        )
-        self.sort_by = ui.select(
-            options=[
-                {'label': 'Creation Date', 'value': 'created_at'},
-                {'label': 'Name', 'value': 'name'}
-            ],
-            label='Sort By'
-        )
-        self.order = ui.select(
-            options=[
-                {'label': 'Ascending', 'value': 'asc'},
-                {'label': 'Descending', 'value': 'desc'}
-            ],
-            label='Order'
-        )
-        ui.button('Apply Filters', on_click=self._apply_filters)
+        """Override BaseSection's _create_content"""
+        with self.content:
+            with ui.column().classes('gap-4 w-full'):
+                self.name_filter = ui.input(label='Task Name Filter')
+                self.status_filter = ui.select(
+                    options={
+                        None: 'All',
+                        True: 'Completed',
+                        False: 'In Progress'
+                    },
+                    value=None,
+                    label='Status Filter'
+                )
+                self.sort_by = ui.select(
+                    options={
+                        'created_at': 'Creation Date',
+                        'name': 'Name'
+                    },
+                    value='created_at',
+                    label='Sort By'
+                )
+                self.order = ui.select(
+                    options={
+                        SortOrder.asc: 'Ascending',
+                        SortOrder.desc: 'Descending'
+                    },
+                    value=SortOrder.asc,
+                    label='Order'
+                )
+                ui.button('Apply Filters', on_click=self._apply_filters)
 
     def _apply_filters(self):
         params = TaskQueryParams(
@@ -41,4 +48,4 @@ class FiltersSection(BaseSection):
             sort_by=self.sort_by.value,
             order=self.order.value
         )
-        self.on_filter(params)
+        self.filter_context.update_filter(params)

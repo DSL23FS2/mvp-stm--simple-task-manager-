@@ -1,8 +1,6 @@
 from nicegui import ui
-from .task_list import TaskListUI
-from .controls.settings_section import SettingsSection
-from .controls.filters_section import FiltersSection
-from .controls.create_section import CreateSection
+from lib.ui.context.task_filter_context import TaskFilterContext
+from lib.ui.controls import TaskListUI, FiltersSection, CreateSection
 
 class MainUI:
     # Базовые размеры
@@ -17,6 +15,7 @@ class MainUI:
     CONTENT_HEIGHT = 'h-[calc(100vh-112px)]'
 
     def __init__(self):
+        self.filter_context = TaskFilterContext()
         self.container = ui.column().classes(f'{self.SCROLL_CONTAINER_WIDTH} ml-4')
         self._create_ui()
 
@@ -45,25 +44,12 @@ class MainUI:
                 # Область прокрутки с фиксированной шириной
                 with ui.scroll_area().classes(f'{self.SCROLL_CONTAINER_WIDTH} {self.CONTENT_HEIGHT}'):
                     with ui.column().classes(f'{self.CONTAINER_WIDTH}'):
-                        self.task_list = TaskListUI()
-                        self.task_list.create()
-
-            # Правая панель управления
-            with ui.column().classes('flex-grow h-full max-w-md gap-4'):
-                # Кнопки управления
-                with ui.row().classes('w-full gap-2 justify-center q-mb-md'):
-                    for btn_data in [
-                        ('Settings', self._toggle_settings),
-                        ('Filters', self._toggle_filters),
-                        ('Create', self._toggle_create)
-                    ]:
-                        ui.button(btn_data[0], on_click=btn_data[1]).classes('w-32')
-
-                # Панели управления
-                with ui.scroll_area().classes(f'w-full {self.CONTENT_HEIGHT}'):
-                    self.settings_section = SettingsSection()
-                    self.filters_section = FiltersSection(self.task_list.refresh_tasks)
-                    self.create_section = CreateSection(self.task_list.create_task)
+                        # Создаем секции - они сразу отобразятся благодаря BaseSection
+                        self.filters_section = FiltersSection(self.filter_context)
+                        self.task_list = TaskListUI(self.filter_context)
+                        # Initial load using default filter
+                        self.task_list.refresh_tasks()
+                        self.create_section = CreateSection(self.task_list.create_task)
 
     def _toggle_settings(self):
         self.settings_section.toggle()
