@@ -20,7 +20,7 @@ class FiltersSection(BaseSection):
                         True: 'Completed',
                         False: 'In Progress'
                     },
-                    value=None,
+                    value=False,
                     label='Status Filter'
                 )
                 self.sort_by = ui.select(

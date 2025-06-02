@@ -3,7 +3,7 @@ from data.models.task.validation import TaskQueryParams
 
 class TaskFilterContext:
     def __init__(self):
-        self._current_filter = TaskQueryParams()
+        self._current_filter = TaskQueryParams(is_completed=False)
         self._subscribers: List[Callable[[TaskQueryParams], None]] = []
 
     @property
