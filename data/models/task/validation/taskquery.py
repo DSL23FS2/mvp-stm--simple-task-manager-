@@ -14,4 +14,4 @@ class TaskQueryParams(BaseModel):
     sort_by: Optional[str] = Field("created_at", description="Поле сортировки")
     order: SortOrder = Field(SortOrder.asc, description="Направление сортировки")
     skip: int = Field(0, ge=0, description="Смещение")
-    limit: int = Field(10, gt=0, le=100, description="Максимум результатов")
+    limit: int = Field(100, gt=0, le=100, description="Максимум результатов")
